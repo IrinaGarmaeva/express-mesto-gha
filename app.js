@@ -1,9 +1,19 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const rateLimiter = require('express-rate-limit');
+const helmet = require('helmet');
+
 const routes = require('./routes');
 
 const { PORT = 3000 } = process.env;
+
+const limiter = rateLimiter({
+  max: 100,
+  windowMS: 15 * 60 * 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
@@ -12,6 +22,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   .catch(() => console.log('No connection to DB'));
 
 const app = express();
+app.use(limiter);
+app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
