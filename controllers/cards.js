@@ -30,7 +30,12 @@ function deleteCard(req, res) {
       }
       res.send(card);
     })
-    .catch((err) => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Переданы некорректные данные при удалении карточки.' });
+      }
+      res.status(500).send({ message: 'На сервере произошла ошибка' });
+    });
 }
 
 function addLike(req, res) {

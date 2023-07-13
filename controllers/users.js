@@ -12,11 +12,16 @@ function getUser(req, res) {
   return User.findById(userId)
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: 'Запрашиваемый пользователь не найден' });
+        return res.status(404).send({ message: `Пользователь по указанному _id: ${userId} не найден` });
       }
       res.status(200).send(user);
     })
-    .catch((err) => res.status(500).send({ message: 'На сервере произошла ошибка' }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        return res.status(400).send({ message: 'Переданы некорректные данные при запросе пользователя.' });
+      }
+      res.status(500).send({ message: 'На сервере произошла ошибка' });
+    });
 }
 
 function createUser(req, res) {
