@@ -17,7 +17,10 @@ function login(req, res) {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = generateToken({ _id: user._id });
-      res.cookie('jwt, token');
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      });
       res.send({ token });
     })
     .catch((err) => res.status(ERROR_UNAUTHORIZED).send({ message: err.message }));
