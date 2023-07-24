@@ -50,6 +50,23 @@ function getUser(req, res) {
     });
 }
 
+function getCurrentUser(req, res) {
+  const userId = req.user._id;
+
+  return User.findById(userId)
+    .then((user) => {
+      if (!user) {
+        res
+          .status(ERROR_NOT_FOUND)
+          .send({
+            message: `Пользователь по указанному _id: ${userId} не найден`,
+          });
+      }
+      res.send(user);
+    })
+    .catch(() => res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' }));
+}
+
 function createUser(req, res) {
   if (!req.body) {
     res.status(ERROR_BAD_REQUEST).send({ message: 'Получены невалидные данные' });
@@ -178,6 +195,7 @@ function updateAvatar(req, res) {
 module.exports = {
   getUsers,
   getUser,
+  getCurrentUser,
   updateUserInfo,
   updateAvatar,
   login,

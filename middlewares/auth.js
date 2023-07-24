@@ -5,7 +5,7 @@ const {
 
 function checkAuth(req, res, next) {
   if (!req.cookies) {
-    return res.status(ERROR_UNAUTHORIZED).send({ message: 'Необходима авторизация111' });
+    return res.status(ERROR_UNAUTHORIZED).send({ message: 'Необходима авторизация' });
   }
 
   const token = req.cookies.jwt;
@@ -18,7 +18,6 @@ function checkAuth(req, res, next) {
   }
 
   req.user = payload;
-  console.log(req.user);
   next();
 }
 

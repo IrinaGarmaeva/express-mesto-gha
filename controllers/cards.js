@@ -2,6 +2,7 @@ const Card = require('../models/card');
 const {
   ERROR_BAD_REQUEST,
   ERROR_NOT_FOUND,
+  ERROR_FORBIDDEN,
   ERROR_INTERNAL_SERVER,
 } = require('../errors/errors');
 
@@ -29,13 +30,21 @@ function createCard(req, res) {
 function deleteCard(req, res) {
   const { cardId } = req.params;
 
-  return Card.findByIdAndRemove(cardId)
+  return Card.findById(cardId)
     .then((card) => {
       if (!card) {
         res.status(ERROR_NOT_FOUND).send({ message: `Карточка с указанным _id: ${cardId} не найдена.` });
         return;
       }
-      res.send(card);
+
+      if (String(card.owner) !== req.user._id) {
+        res.status(ERROR_FORBIDDEN).send({ message: 'Недостаточно прав для удаления карточки' });
+        return;
+      }
+
+      return Card.findByIdAndRemove(cardId)
+        .then((card) => res.send(card))
+        .catch(() => res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' }));
     })
     .catch((err) => {
       if (err.name === 'CastError') {
