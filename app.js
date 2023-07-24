@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const rateLimiter = require('express-rate-limit');
 const helmet = require('helmet');
 
@@ -22,6 +23,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   .catch(() => console.log('No connection to DB'));
 
 const app = express();
+app.use(cookieParser());
 app.use(limiter);
 app.use(helmet());
 app.use(bodyParser.json());
