@@ -1,76 +1,54 @@
 const bcrypt = require('bcrypt');
-const validator = require('validator');
 const User = require('../models/user');
 const { generateToken } = require('../utils/utils');
+const NotFoundError = require('../errors/notFoundError');
+const BadRequestError = require('../errors/badRequest');
+const ConflictError = require('../errors/conflictError');
+const InternalServerError = require('../errors/internalServerError');
 
 const saltRounds = 10;
 
-const {
-  ERROR_BAD_REQUEST,
-  ERROR_UNAUTHORIZED,
-  ERROR_NOT_FOUND,
-  ERROR_INTERNAL_SERVER,
-} = require('../errors/errors');
-
-function getUsers(req, res) {
+function getUsers(req, res, next) {
   return User.find({})
     .then((users) => res.send(users))
-    .catch(() => res
-      .status(ERROR_INTERNAL_SERVER)
-      .send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 }
 
-function getUser(req, res) {
+function getUser(req, res, next) {
   const { userId } = req.params;
 
   return User.findById(userId)
     .then((user) => {
       if (!user) {
-        res
-          .status(ERROR_NOT_FOUND)
-          .send({
-            message: `Пользователь по указанному _id: ${userId} не найден`,
-          });
-        return;
+        throw new NotFoundError(`Пользователь по указанному _id: ${userId} не найден`);
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(ERROR_BAD_REQUEST)
-          .send({
-            message: 'Переданы некорректные данные при запросе пользователя.',
-          });
-        return;
+        return next(new BadRequestError('Переданы некорректные данные при запросе пользователя.'));
       }
-      res
-        .status(ERROR_INTERNAL_SERVER)
-        .send({ message: 'На сервере произошла ошибка' });
+
+      return next();
     });
 }
 
-function getCurrentUser(req, res) {
+function getCurrentUser(req, res, next) {
   const userId = req.user._id;
 
   return User.findById(userId)
     .then((user) => {
       if (!user) {
-        res
-          .status(ERROR_NOT_FOUND)
-          .send({
-            message: `Пользователь по указанному _id: ${userId} не найден`,
-          });
+        throw new NotFoundError(`Пользователь по указанному _id: ${userId} не найден`);
       }
       res.send(user);
     })
-    .catch(() => res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' }));
+    .catch(next);
 }
 
-function createUser(req, res) {
-  if (!req.body) {
-    res.status(ERROR_BAD_REQUEST).send({ message: 'Получены невалидные данные' });
-    return;
+function createUser(req, res, next) {
+  if (Object.keys(req.body).length === 0) {
+    throw new BadRequestError('Получены невалидные данные');
   }
 
   const {
@@ -78,14 +56,20 @@ function createUser(req, res) {
   } = req.body;
 
   if (!email || !password) {
-    res.status(ERROR_BAD_REQUEST).send({ message: 'Email или пароль не заполнены' });
-    return;
+    throw new BadRequestError('Email или пароль не заполнены');
   }
 
-  if (!validator.isEmail(email)) {
-    res.status(ERROR_BAD_REQUEST).send({ message: 'Пользователь с таким Email уже существует' });
-    return;
-  }
+  // if (User.findOne({email})) {
+  //   console.log(User.findOne({email}));
+  //   throw new ConflictError(`Пользователь с таким Email: ${email} уже существует`);
+  // }
+
+  // return User.findOne(email)
+  //   .then((user) => {
+  //     res.send(user)
+  //     throw new ConflictError(`Пользователь с таким Email: ${email} уже существует`);
+  //   })
+  //   .catch(() => res.status(500).send({message: 'почта не найдена'}))
 
   bcrypt.hash(password, saltRounds)
     .then((hash) => User.create({
@@ -93,19 +77,27 @@ function createUser(req, res) {
     }))
     .then((user) => {
       if (!user) {
-        res.status(ERROR_INTERNAL_SERVER).send({ message: 'На сервере произошла ошибка' });
-        return;
+        throw new InternalServerError('На сервере произошла ошибка!!');
       }
       res.status(201).send(user);
-    });
-};
+    })
+    .catch((err) => {
+      console.log(err);
+      if (err.code === 11000) {
+        return next(new ConflictError(`Пользователь с таким Email: ${email} уже существует`));
+      }
 
-function login(req, res) {
-  if (!req.body) {
-    res
-      .status(ERROR_BAD_REQUEST)
-      .send({ message: 'Получены невалидные данные' });
-    return;
+      if (err.name === 'ValidationError') {
+        return next(new BadRequestError('Переданы некорректные данные при создании пользователя'));
+      }
+
+      return next(err);
+    });
+}
+
+function login(req, res, next) {
+  if (Object.keys(req.body).length === 0) {
+    throw new BadRequestError('Получены невалидные данные');
   }
 
   const { email, password } = req.body;
@@ -120,10 +112,13 @@ function login(req, res) {
       });
       res.send({ token });
     })
-    .catch((err) => res.status(ERROR_UNAUTHORIZED).send({ message: err.message }));
+    .catch(next);
+  // .catch((err) => {
+  //   res.status(ERROR_UNAUTHORIZED).send({ message: err.message })
+  // });
 }
 
-function updateUserInfo(req, res) {
+function updateUserInfo(req, res, next) {
   const { name, about } = req.body;
 
   return User.findByIdAndUpdate(
@@ -133,32 +128,19 @@ function updateUserInfo(req, res) {
   )
     .then((user) => {
       if (!user) {
-        res
-          .status(ERROR_NOT_FOUND)
-          .send({
-            message: `Пользователь с указанным _id: ${req.user._id} не найден.`,
-          });
-        return;
+        throw new NotFoundError(`Пользователь с указанным _id: ${req.user._id} не найден.`);
       }
       res.send(user);
     })
     .catch((err) => {
-      console.log(err.name);
       if (err.name === 'ValidationError' || 'CastError') {
-        res
-          .status(ERROR_BAD_REQUEST)
-          .send({
-            message: 'Переданы некорректные данные при обновлении профиля.',
-          });
-        return;
+        return next(new BadRequestError('Переданы некорректные данные при обновлении профиля.'));
       }
-      res
-        .status(ERROR_INTERNAL_SERVER)
-        .send({ message: 'На сервере произошла ошибка' });
+      return next();
     });
 }
 
-function updateAvatar(req, res) {
+function updateAvatar(req, res, next) {
   const { avatar } = req.body;
 
   return User.findByIdAndUpdate(
@@ -168,27 +150,15 @@ function updateAvatar(req, res) {
   )
     .then((user) => {
       if (!user) {
-        res
-          .status(ERROR_NOT_FOUND)
-          .send({
-            message: `Пользователь с указанным _id: ${req.user._id} не найден.`,
-          });
-        return;
+        throw new NotFoundError(`Пользователь с указанным _id: ${req.user._id} не найден.`);
       }
       res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res
-          .status(ERROR_BAD_REQUEST)
-          .send({
-            message: 'Переданы некорректные данные при обновлении профиля.',
-          });
-        return;
+        return next(new BadRequestError('Переданы некорректные данные при обновлении профиля.'));
       }
-      res
-        .status(ERROR_INTERNAL_SERVER)
-        .send({ message: 'На сервере произошла ошибка' });
+      return next();
     });
 }
 
