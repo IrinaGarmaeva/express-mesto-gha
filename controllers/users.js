@@ -79,7 +79,13 @@ function createUser(req, res, next) {
       if (!user) {
         throw new InternalServerError('На сервере произошла ошибка!!');
       }
-      res.status(201).send(user);
+      res.status(201).send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      });
     })
     .catch((err) => {
       console.log(err);
