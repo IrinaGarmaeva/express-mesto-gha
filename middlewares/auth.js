@@ -12,8 +12,7 @@ function checkAuth(req, res, next) {
   try {
     payload = checkToken(token);
   } catch (err) {
-    // return next(new UnauthorizedError('Необходима авторизация'));
-    next(err);
+    return next(new UnauthorizedError('Необходима авторизация'));
   }
 
   req.user = payload;
