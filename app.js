@@ -2,21 +2,17 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
-const rateLimiter = require('express-rate-limit');
+
 const helmet = require('helmet');
 const { errors } = require('celebrate');
 
 const routes = require('./routes');
 const errorHandler = require('./middlewares/errorHandler');
+const { rateLimiter } = require('./utils/limiter');
 
 const { PORT = 3000 } = process.env;
 
-const limiter = rateLimiter({
-  max: 100,
-  windowMS: 15 * 60 * 1000,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+const limiter = rateLimiter;
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,

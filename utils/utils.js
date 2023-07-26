@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const UnauthorizedError = require('../errors/unauthorizedError');
 
 const SECRET_KEY = 'secret';
 
@@ -8,13 +9,13 @@ function generateToken(payload) {
 
 function checkToken(token) {
   if (!token) {
-    return false;
+    throw new UnauthorizedError('Необходима авторизация');
   }
 
   try {
     return jwt.verify(token, SECRET_KEY);
   } catch (error) {
-    return false;
+    throw new UnauthorizedError('Необходима авторизация');
   }
 }
 

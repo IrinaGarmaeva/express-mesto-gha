@@ -4,7 +4,6 @@ const { generateToken } = require('../utils/utils');
 const NotFoundError = require('../errors/notFoundError');
 const BadRequestError = require('../errors/badRequest');
 const ConflictError = require('../errors/conflictError');
-const InternalServerError = require('../errors/internalServerError');
 
 const saltRounds = 10;
 
@@ -18,12 +17,7 @@ function getUser(req, res, next) {
   const { userId } = req.params;
 
   return User.findById(userId)
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError(`Пользователь по указанному _id: ${userId} не найден`);
-      }
-      res.send(user);
-    })
+    .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
         return next(new BadRequestError('Переданы некорректные данные при запросе пользователя.'));
@@ -55,18 +49,11 @@ function createUser(req, res, next) {
     name, about, avatar, email, password,
   } = req.body;
 
-  if (!email || !password) {
-    throw new BadRequestError('Email или пароль не заполнены');
-  }
-
   bcrypt.hash(password, saltRounds)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
     .then((user) => {
-      if (!user) {
-        throw new InternalServerError('На сервере произошла ошибка!!');
-      }
       res.status(201).send({
         name: user.name,
         about: user.about,
@@ -89,10 +76,6 @@ function createUser(req, res, next) {
 }
 
 function login(req, res, next) {
-  if (Object.keys(req.body).length === 0) {
-    throw new BadRequestError('Получены невалидные данные');
-  }
-
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -106,9 +89,6 @@ function login(req, res, next) {
       res.send({ token });
     })
     .catch(next);
-  // .catch((err) => {
-  //   res.status(ERROR_UNAUTHORIZED).send({ message: err.message })
-  // });
 }
 
 function updateUserInfo(req, res, next) {
@@ -129,7 +109,7 @@ function updateUserInfo(req, res, next) {
       if (err.name === 'ValidationError' || 'CastError') {
         return next(new BadRequestError('Переданы некорректные данные при обновлении профиля.'));
       }
-      return next();
+      return next(err);
     });
 }
 
@@ -151,7 +131,7 @@ function updateAvatar(req, res, next) {
       if (err.name === 'CastError') {
         return next(new BadRequestError('Переданы некорректные данные при обновлении профиля.'));
       }
-      return next();
+      return next(err);
     });
 }
 
