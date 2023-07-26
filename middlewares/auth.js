@@ -2,11 +2,11 @@ const { checkToken } = require('../utils/utils');
 const UnauthorizedError = require('../errors/unauthorizedError');
 
 function checkAuth(req, res, next) {
-  const token = req.cookies.jwt;
-
-  if (!req.cookies || token) {
+  if (!req.cookies) {
     throw new UnauthorizedError('Необходима авторизация');
   }
+
+  const token = req.cookies.jwt;
 
   let payload;
   try {
