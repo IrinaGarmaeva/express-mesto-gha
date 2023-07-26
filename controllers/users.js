@@ -59,18 +59,6 @@ function createUser(req, res, next) {
     throw new BadRequestError('Email или пароль не заполнены');
   }
 
-  // if (User.findOne({email})) {
-  //   console.log(User.findOne({email}));
-  //   throw new ConflictError(`Пользователь с таким Email: ${email} уже существует`);
-  // }
-
-  // return User.findOne(email)
-  //   .then((user) => {
-  //     res.send(user)
-  //     throw new ConflictError(`Пользователь с таким Email: ${email} уже существует`);
-  //   })
-  //   .catch(() => res.status(500).send({message: 'почта не найдена'}))
-
   bcrypt.hash(password, saltRounds)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
@@ -88,7 +76,6 @@ function createUser(req, res, next) {
       });
     })
     .catch((err) => {
-      console.log(err);
       if (err.code === 11000) {
         return next(new ConflictError(`Пользователь с таким Email: ${email} уже существует`));
       }
