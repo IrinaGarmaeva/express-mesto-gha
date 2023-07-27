@@ -28,7 +28,7 @@ function getUser(req, res, next) {
         return next(new BadRequestError('Переданы некорректные данные при запросе пользователя.'));
       }
 
-      return next();
+      return next(err);
     });
 }
 
