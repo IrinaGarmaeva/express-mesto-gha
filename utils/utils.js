@@ -15,6 +15,7 @@ function checkToken(token) {
   try {
     return jwt.verify(token, SECRET_KEY);
   } catch (error) {
+    console.log('не прошла авторизация');
     throw new UnauthorizedError('Необходима авторизация');
   }
 }

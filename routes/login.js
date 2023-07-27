@@ -10,8 +10,4 @@ router.post('/signin', celebrate({
   }),
 }), login);
 
-router.get('/signout', (req, res) => {
-  res.clearCookie('jwt').send({ message: 'Выход' });
-});
-
 module.exports = router;

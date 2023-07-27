@@ -8,11 +8,9 @@ const { errors } = require('celebrate');
 
 const routes = require('./routes');
 const errorHandler = require('./middlewares/errorHandler');
-const { rateLimiter } = require('./utils/limiter');
+const limiter = require('./utils/limiter');
 
 const { PORT = 3000 } = process.env;
-
-const limiter = rateLimiter;
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
