@@ -16,6 +16,6 @@ router.use('/users', userRoutes);
 router.use('/cards', cardRoutes);
 router.use('/signout', signOutRoute);
 
-router.use('/*', (req, res, next) => next(new NotFoundError(`Ресурс по адресу ${req.path} не найден`)));
+router.use('/*', (req, res, next) => next(new NotFoundError('Указан некорректный путь в URL адресе')));
 
 module.exports = router;

@@ -17,7 +17,12 @@ function getUser(req, res, next) {
   const { userId } = req.params;
 
   return User.findById(userId)
-    .then((user) => res.send(user))
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError(`Пользователь по указанному _id: ${userId} не найден`);
+      }
+      res.send(user);
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         return next(new BadRequestError('Переданы некорректные данные при запросе пользователя.'));
