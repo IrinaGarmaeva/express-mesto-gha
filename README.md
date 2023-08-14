@@ -1,5 +1,5 @@
 [![Tests](../../actions/workflows/tests-13-sprint.yml/badge.svg)](../../actions/workflows/tests-13-sprint.yml) [![Tests](../../actions/workflows/tests-14-sprint.yml/badge.svg)](../../actions/workflows/tests-14-sprint.yml)
-# Edicational purpose project "Mesto" backend from [Yandex Practicum](https://practicum.yandex.ru/) Web-developer course.
+# Educational purpose project "Mesto" backend from [Yandex Practicum](https://practicum.yandex.ru/) Web-developer course.
 
 ## Description 
 This project is a part of building the backend for the project [Mesto](https://github.com/IrinaGarmaeva/react-mesto-auth.git).
